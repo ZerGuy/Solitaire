@@ -17,16 +17,17 @@ public class Card {
     //	"7", "8", "9", "10", "J", "Q", "K"};
     // data fields
 
-    private boolean faceup;
+    private boolean isFaceUp;
     private int rank;
     private int suit;
+    private boolean isSelected;
 
 
     // constructor
     Card(final int suitValue, final int rankValue) {
         suit = suitValue;
         rank = rankValue;
-        faceup = false;
+        isFaceUp = false;
     }
 
 
@@ -42,12 +43,12 @@ public class Card {
 
 
     public boolean isFaceUp() {
-        return faceup;
+        return isFaceUp;
     }
 
 
     public void flip() {
-        faceup = !faceup;
+        isFaceUp = !isFaceUp;
     }
 
 
@@ -66,6 +67,12 @@ public class Card {
         g.clearRect(x, y, WIDTH, HEIGHT);
         g.setColor(Color.black);
         g.drawRect(x, y, WIDTH, HEIGHT);
+
+        if(isSelected){
+            g.setColor(Color.green);
+            g.drawRect(x-1, y-1, WIDTH+2, HEIGHT+2);
+        }
+
         // draw body of card
         if (isFaceUp()) {
             if (getColor() == RED) {
@@ -119,5 +126,15 @@ public class Card {
 
     public boolean isKing() {
         return getRank() == 12;
+    }
+
+
+    public void setSelected(boolean selected) {
+        this.isSelected = selected;
+    }
+
+
+    public boolean isSelected() {
+        return isSelected;
     }
 }

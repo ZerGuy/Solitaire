@@ -4,11 +4,13 @@ import java.awt.*;
 public class TablePile extends CardPile {
 
     public static final int PAINT_Y_OFFSET = 35;
+    private int numberInArray;
 
 
     TablePile(final int x, final int y, final int c) {
         // initialize the parent class
         super(x, y);
+        numberInArray = 5 + c;
         // then initialize our pile of cards
         for (int i = 0; i < c; i++) {
             addCard(Solitaire.deckPile.pop());
@@ -31,6 +33,12 @@ public class TablePile extends CardPile {
     public boolean includes(final int tx, final int ty) {
         int offset = 0;
         Card tmp = getTop();
+
+        if(tmp==null){
+            return (tx >= x) && (tx <= x + Card.WIDTH) &&
+                    (ty >= y) && (ty <= y + Card.HEIGHT);
+        }
+
         while (tmp.link != null) {
             tmp = tmp.link;
             offset += PAINT_Y_OFFSET;
@@ -52,23 +60,15 @@ public class TablePile extends CardPile {
             return;
         }
 
-        // else see if any getSuit pile can take card
-        topCard = pop();
-        for (int i = 0; i < 4; i++) {
-            if (Solitaire.suitPile[i].canTake(topCard)) {
-                Solitaire.suitPile[i].addCard(topCard);
-                return;
+        if (!Solitaire.cardIsSelected()) {
+            Solitaire.selectCard(topCard, numberInArray);
+        } else if (Solitaire.getSelectedCard() == topCard) {
+            Solitaire.deselectCard();
+        } else {
+            if(canTake(Solitaire.getSelectedCard())){
+                addCard(Solitaire.popSelectedCard());
             }
         }
-        // else see if any other table pile can take card
-        for (int i = 0; i < 7; i++) {
-            if (Solitaire.tableau[i].canTake(topCard)) {
-                Solitaire.tableau[i].addCard(topCard);
-                return;
-            }
-        }
-        // else put it back on our pile
-        addCard(topCard);
     }
 
 

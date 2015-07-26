@@ -35,13 +35,14 @@ public class DeckPile extends CardPile {
         if (isEmpty()) {
             while (!Solitaire.discardPile.isEmpty()) {
                 Card card = Solitaire.discardPile.pop();
-                if(card.isFaceUp()){
+                if (card.isFaceUp()) {
                     card.flip();
                 }
                 addCard(card);
             }
             return;
         }
+        Solitaire.deselectCard();
         Solitaire.discardPile.addCard(pop());
     }
 }

@@ -13,4 +13,14 @@ public class SuitPile extends CardPile {
         return (aCard.getSuit() == topCard.getSuit()) &&
                 (aCard.getRank() == 1 + topCard.getRank());
     }
+
+
+    @Override
+    public void select(int tx, int ty) {
+        if(Solitaire.cardIsSelected()){
+            if(canTake(Solitaire.getSelectedCard())){
+                addCard(Solitaire.popSelectedCard());
+            }
+        }
+    }
 }

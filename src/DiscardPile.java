@@ -17,20 +17,13 @@ public class DiscardPile extends CardPile {
         if (isEmpty()) {
             return;
         }
-        Card topCard = pop();
-        for (int i = 0; i < 4; i++) {
-            if (Solitaire.suitPile[i].canTake(topCard)) {
-                Solitaire.suitPile[i].addCard(topCard);
-                return;
-            }
+
+        Card topCard = getTop();
+
+        if (!Solitaire.cardIsSelected()) {
+            Solitaire.selectCard(topCard, 1);
+        } else if (Solitaire.getSelectedCard() == topCard) {
+            Solitaire.deselectCard();
         }
-        for (int i = 0; i < 7; i++) {
-            if (Solitaire.tableau[i].canTake(topCard)) {
-                Solitaire.tableau[i].addCard(topCard);
-                return;
-            }
-        }
-        // nobody can use it, put it back on our list
-        addCard(topCard);
     }
 }

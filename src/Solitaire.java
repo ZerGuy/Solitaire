@@ -14,6 +14,40 @@ public class Solitaire extends Applet {
     static SuitPile suitPile[];
     static CardPile allPiles[];
 
+    static int selectedPile = -1;
+
+
+    public static boolean cardIsSelected() {
+        return selectedPile != -1;
+    }
+
+
+    public static Card getSelectedCard() {
+        return allPiles[selectedPile].getTop();
+    }
+
+
+    public static Card popSelectedCard() {
+        Card card = allPiles[selectedPile].pop();
+        card.setSelected(false);
+        selectedPile = -1;
+        return card;
+    }
+
+
+    public static void selectCard(Card card, int pileNo) {
+        card.setSelected(true);
+        selectedPile = pileNo;
+    }
+
+
+    public static void deselectCard() {
+        if (cardIsSelected()) {
+            getSelectedCard().setSelected(false);
+        }
+        selectedPile = -1;
+    }
+
 
     public void init() {
         // first allocate the arrays
@@ -24,12 +58,10 @@ public class Solitaire extends Applet {
         allPiles[0] = deckPile = new DeckPile(335, 5);
         allPiles[1] = discardPile = new DiscardPile(268, 5);
         for (int i = 0; i < 4; i++) {
-            allPiles[2 + i] = suitPile[i] =
-                    new SuitPile(15 + 60 * i, 5);
+            allPiles[2 + i] = suitPile[i] = new SuitPile(15 + 60 * i, 5);
         }
         for (int i = 0; i < 7; i++) {
-            allPiles[6 + i] = tableau[i] =
-                    new TablePile(5 + 55 * i, 80, i + 1);
+            allPiles[6 + i] = tableau[i] = new TablePile(5 + 55 * i, 80, i + 1);
         }
     }
 
@@ -42,6 +74,7 @@ public class Solitaire extends Applet {
 
 
     public boolean mouseDown(final Event evt, final int x, final int y) {
+        System.out.println(selectedPile);
         for (int i = 0; i < 13; i++) {
             if (allPiles[i].includes(x, y)) {
                 allPiles[i].select(x, y);
