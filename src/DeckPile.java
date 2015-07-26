@@ -33,6 +33,13 @@ public class DeckPile extends CardPile {
 
     public void select(final int tx, final int ty) {
         if (isEmpty()) {
+            while (!Solitaire.discardPile.isEmpty()) {
+                Card card = Solitaire.discardPile.pop();
+                if(card.isFaceUp()){
+                    card.flip();
+                }
+                addCard(card);
+            }
             return;
         }
         Solitaire.discardPile.addCard(pop());
