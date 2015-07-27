@@ -42,7 +42,7 @@ public class DeckPile extends CardPile {
             }
             return;
         }
-        Solitaire.deselectCard();
+        Solitaire.deselectCards();
         Solitaire.discardPile.addCard(pop());
     }
 }

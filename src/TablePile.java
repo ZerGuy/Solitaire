@@ -5,18 +5,23 @@ public class TablePile extends CardPile {
 
     public static final int PAINT_Y_OFFSET = 35;
     private int numberInArray;
+    private int numberOfCadsFaceUp = 0;
+    private int numberOfCadsFaceDown = 0;
 
 
     TablePile(final int x, final int y, final int c) {
         // initialize the parent class
         super(x, y);
-        numberInArray = 5 + c;
         // then initialize our pile of cards
         for (int i = 0; i < c; i++) {
             addCard(Solitaire.deckPile.pop());
         }
         // flip topmost card face up
         getTop().flip();
+
+        numberInArray = 5 + c;
+        numberOfCadsFaceDown = c - 1;
+        numberOfCadsFaceUp = 1;
     }
 
 
@@ -25,50 +30,96 @@ public class TablePile extends CardPile {
             return aCard.isKing();
         }
         Card topCard = getTop();
-        return (aCard.getColor() != topCard.getColor()) &&
-                (aCard.getRank() == topCard.getRank() - 1);
+        return (aCard.getColor() != topCard.getColor()) && (aCard.getRank() == topCard.getRank() - 1);
     }
 
 
     public boolean includes(final int tx, final int ty) {
-        int offset = 0;
+        boolean answer = false;
+
         Card tmp = getTop();
 
-        if(tmp==null){
-            return (tx >= x) && (tx <= x + Card.WIDTH) &&
-                    (ty >= y) && (ty <= y + Card.HEIGHT);
+        if (tmp == null) {  // no card
+            answer = (tx >= x) && (tx <= x + Card.WIDTH) && (ty >= y) && (ty <= y + Card.HEIGHT);
+        } else {
+            int yHigher;
+            int yLower = y + (numberOfCadsFaceUp + numberOfCadsFaceDown - 1) * PAINT_Y_OFFSET + Card.HEIGHT;
+
+            if(numberOfCadsFaceUp == 0){
+                yHigher = y + (numberOfCadsFaceDown - 1) * PAINT_Y_OFFSET;
+            }
+            else{
+                yHigher = y + numberOfCadsFaceDown * PAINT_Y_OFFSET;
+            }
+
+            answer = (tx >= x) && (tx <= x + Card.WIDTH) && (ty >= yHigher) && (ty <= yLower);
         }
 
-        while (tmp.link != null) {
-            tmp = tmp.link;
-            offset += PAINT_Y_OFFSET;
-        }
-        return (tx >= x) && (tx <= x + Card.WIDTH) &&
-                (ty >= y + offset) && (ty <= y + offset + Card.HEIGHT);
+        return answer;
     }
 
 
     public void select(final int tx, final int ty) {
-        if (isEmpty()) {
-            return;
-        }
+        System.out.println(numberOfCadsFaceDown + " " + numberOfCadsFaceUp);
+        if (isEmpty()) {    // no card
+            if (Solitaire.cardIsSelected()) {
+                if (canTake(Solitaire.getSelectedCard())) {
+                    addCard(Solitaire.popSelectedCards());
+                }
+            }
+        } else {    //there are some cards
+            Card topCard = getTop();
 
-        // if face down, then flip
-        Card topCard = getTop();
-        if (!topCard.isFaceUp()) {
-            topCard.flip();
-            return;
-        }
+            if (!topCard.isFaceUp()) { // if face down, then flip
+                topCard.flip();
+                numberOfCadsFaceDown--;
+                numberOfCadsFaceUp++;
+                Solitaire.deselectCards();
+            } else {
+                //calculate how many cards selected
+                int yLowerBound = y + (numberOfCadsFaceDown + numberOfCadsFaceUp - 1) * PAINT_Y_OFFSET + Card.HEIGHT;
+                int numOfSelectedCards = 1;
+                if (ty < yLowerBound - Card.HEIGHT){
+                    numOfSelectedCards += (yLowerBound - ty - Card.HEIGHT)/PAINT_Y_OFFSET + 1;
+                }
+                Card pointedCard = topCard;
+                for (int i = 1; i < numOfSelectedCards; i++) {
+                    pointedCard = pointedCard.link;
+                }
 
-        if (!Solitaire.cardIsSelected()) {
-            Solitaire.selectCard(topCard, numberInArray);
-        } else if (Solitaire.getSelectedCard() == topCard) {
-            Solitaire.deselectCard();
-        } else {
-            if(canTake(Solitaire.getSelectedCard())){
-                addCard(Solitaire.popSelectedCard());
+                if (!Solitaire.cardIsSelected()) {
+                    Solitaire.selectCards(topCard, numberInArray, numOfSelectedCards);
+                } else if (Solitaire.getSelectedCard() == pointedCard) {
+                    System.out.println("equals");
+                    Solitaire.deselectCards();
+                } else {
+                    if (canTake(Solitaire.getSelectedCard())) {
+                        addCard(Solitaire.popSelectedCards());
+                    }
+                }
             }
         }
+    }
+
+
+    @Override
+    public Card pop() {
+        numberOfCadsFaceUp--;
+        return super.pop();
+    }
+
+
+    @Override
+    public void addCard(Card[] cards) {
+        super.addCard(cards);
+        numberOfCadsFaceUp += cards.length;
+    }
+
+
+    @Override
+    public void addCard(Card card) {
+        super.addCard(card);
+        numberOfCadsFaceUp++;
     }
 
 

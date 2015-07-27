@@ -51,9 +51,17 @@ public class CardPile {
     }
 
 
-    public void addCard(final Card aCard) {
-        aCard.link = firstCard;
-        firstCard = aCard;
+    public void addCard(final Card[] cards) {
+        for (int i = cards.length - 1; i >= 0; i--) {
+            cards[i].link = firstCard;
+            firstCard = cards[i];
+        }
+    }
+
+
+    public void addCard(final Card card) {
+        card.link = firstCard;
+        firstCard = card;
     }
 
 

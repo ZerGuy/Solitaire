@@ -15,6 +15,7 @@ public class Solitaire extends Applet {
     static CardPile allPiles[];
 
     static int selectedPile = -1;
+    static int numberOfSelectedCards = 0;
 
 
     public static boolean cardIsSelected() {
@@ -23,29 +24,49 @@ public class Solitaire extends Applet {
 
 
     public static Card getSelectedCard() {
-        return allPiles[selectedPile].getTop();
-    }
-
-
-    public static Card popSelectedCard() {
-        Card card = allPiles[selectedPile].pop();
-        card.setSelected(false);
-        selectedPile = -1;
+        Card card = allPiles[selectedPile].getTop();
+        for (int i = 1; i < numberOfSelectedCards; i++) {
+            card = card.link;
+        }
         return card;
     }
 
 
-    public static void selectCard(Card card, int pileNo) {
-        card.setSelected(true);
-        selectedPile = pileNo;
+    public static Card[] popSelectedCards() {
+        Card cards[] = new Card[numberOfSelectedCards];
+        for (int i = 0; i < numberOfSelectedCards; i++) {
+            Card tmp = allPiles[selectedPile].pop();
+            cards[i] = tmp;
+            tmp.setSelected(false);
+        }
+        selectedPile = -1;
+        numberOfSelectedCards = 0;
+        return cards;
     }
 
 
-    public static void deselectCard() {
+    public static void selectCards(Card card, int pileNo, int num) {
+        System.out.println("Number Sel: " + num);
+        Card tmp = card;
+        for (int i = 0; i < num; i++) {
+            tmp.setSelected(true);
+            tmp = tmp.link;
+        }
+        selectedPile = pileNo;
+        numberOfSelectedCards = num;
+    }
+
+
+    public static void deselectCards() {
         if (cardIsSelected()) {
-            getSelectedCard().setSelected(false);
+            Card tmp = allPiles[selectedPile].getTop();
+            for (int i = 0; i < numberOfSelectedCards; i++) {
+                tmp.setSelected(false);
+                tmp = tmp.link;
+            }
         }
         selectedPile = -1;
+        numberOfSelectedCards = 0;
     }
 
 
@@ -74,7 +95,6 @@ public class Solitaire extends Applet {
 
 
     public boolean mouseDown(final Event evt, final int x, final int y) {
-        System.out.println(selectedPile);
         for (int i = 0; i < 13; i++) {
             if (allPiles[i].includes(x, y)) {
                 allPiles[i].select(x, y);

@@ -5,11 +5,11 @@ public class DiscardPile extends CardPile {
     }
 
 
-    public void addCard(final Card aCard) {
-        if (!aCard.isFaceUp()) {
-            aCard.flip();
+    public void addCard(final Card card) {
+        if (!card.isFaceUp()) {
+            card.flip();
         }
-        super.addCard(aCard);
+        super.addCard(card);
     }
 
 
@@ -21,9 +21,9 @@ public class DiscardPile extends CardPile {
         Card topCard = getTop();
 
         if (!Solitaire.cardIsSelected()) {
-            Solitaire.selectCard(topCard, 1);
+            Solitaire.selectCards(topCard, 1, 1);
         } else if (Solitaire.getSelectedCard() == topCard) {
-            Solitaire.deselectCard();
+            Solitaire.deselectCards();
         }
     }
 }
