@@ -17,6 +17,9 @@ public class Solitaire extends Applet {
     static int selectedPile = -1;
     static int numberOfSelectedCards = 0;
 
+    static final int WIDTH = 450;
+    static final int HEIGHT = 550;
+
 
     public static boolean cardIsSelected() {
         return selectedPile != -1;
@@ -71,6 +74,7 @@ public class Solitaire extends Applet {
 
 
     public void init() {
+        setSize(WIDTH, HEIGHT);
         // first allocate the arrays
         allPiles = new CardPile[13];
         suitPile = new SuitPile[4];
@@ -88,9 +92,15 @@ public class Solitaire extends Applet {
 
 
     public void paint(final Graphics g) {
+        Dimension dim = getSize();
+        Image offscreen = createImage(dim.width, dim.height);
+        Graphics offgr = offscreen.getGraphics();
+
         for (int i = 0; i < 13; i++) {
-            allPiles[i].display(g);
+            allPiles[i].display(offgr);
         }
+
+        g.drawImage(offscreen, 0, 0, this);
     }
 
 
