@@ -14,6 +14,10 @@ public class DiscardPile extends CardPile {
 
 
     public void select(final int tx, final int ty) {
+        if(Solitaire.cardIsSelected() && Solitaire.isSamePile(1)){
+            Solitaire.deselectCards();
+            return;
+        }
         if (isEmpty()) {
             return;
         }
@@ -21,7 +25,7 @@ public class DiscardPile extends CardPile {
         Card topCard = getTop();
 
         if (!Solitaire.cardIsSelected()) {
-            Solitaire.selectCards(topCard, 1, 1);
+            Solitaire.selectCards(1, 1, tx - x, ty - y);
         } else if (Solitaire.getSelectedCard() == topCard) {
             Solitaire.deselectCards();
         }

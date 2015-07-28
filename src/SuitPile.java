@@ -19,7 +19,7 @@ public class SuitPile extends CardPile {
     public void select(int tx, int ty) {
         if(Solitaire.cardIsSelected()){
             if(canTake(Solitaire.getSelectedCard())){
-                addCard(Solitaire.popSelectedCards());
+                addCards(Solitaire.popSelectedCards());
             }
         }
     }

@@ -45,10 +45,9 @@ public class TablePile extends CardPile {
             int yHigher;
             int yLower = y + (numberOfCadsFaceUp + numberOfCadsFaceDown - 1) * PAINT_Y_OFFSET + Card.HEIGHT;
 
-            if(numberOfCadsFaceUp == 0){
+            if (numberOfCadsFaceUp == 0) {
                 yHigher = y + (numberOfCadsFaceDown - 1) * PAINT_Y_OFFSET;
-            }
-            else{
+            } else {
                 yHigher = y + numberOfCadsFaceDown * PAINT_Y_OFFSET;
             }
 
@@ -60,17 +59,18 @@ public class TablePile extends CardPile {
 
 
     public void select(final int tx, final int ty) {
-        System.out.println(numberOfCadsFaceDown + " " + numberOfCadsFaceUp);
         if (isEmpty()) {    // no card
             if (Solitaire.cardIsSelected()) {
                 if (canTake(Solitaire.getSelectedCard())) {
-                    addCard(Solitaire.popSelectedCards());
+                    addCards(Solitaire.popSelectedCards());
+                } else if (Solitaire.isSamePile(numberInArray)) {
+                    Solitaire.deselectCards();
                 }
             }
         } else {    //there are some cards
             Card topCard = getTop();
 
-            if (!topCard.isFaceUp()) { // if face down, then flip
+            if (!Solitaire.cardIsSelected() && !topCard.isFaceUp()) { // if face down, then flip
                 topCard.flip();
                 numberOfCadsFaceDown--;
                 numberOfCadsFaceUp++;
@@ -79,22 +79,25 @@ public class TablePile extends CardPile {
                 //calculate how many cards selected
                 int yLowerBound = y + (numberOfCadsFaceDown + numberOfCadsFaceUp - 1) * PAINT_Y_OFFSET + Card.HEIGHT;
                 int numOfSelectedCards = 1;
-                if (ty < yLowerBound - Card.HEIGHT){
-                    numOfSelectedCards += (yLowerBound - ty - Card.HEIGHT)/PAINT_Y_OFFSET + 1;
+                if (ty < yLowerBound - Card.HEIGHT) {
+                    numOfSelectedCards += (yLowerBound - ty - Card.HEIGHT) / PAINT_Y_OFFSET + 1;
                 }
                 Card pointedCard = topCard;
+                int yReal = y + (numberOfCadsFaceDown + numberOfCadsFaceUp - numOfSelectedCards) * PAINT_Y_OFFSET;
+
                 for (int i = 1; i < numOfSelectedCards; i++) {
                     pointedCard = pointedCard.link;
                 }
 
                 if (!Solitaire.cardIsSelected()) {
-                    Solitaire.selectCards(topCard, numberInArray, numOfSelectedCards);
-                } else if (Solitaire.getSelectedCard() == pointedCard) {
-                    System.out.println("equals");
+                    Solitaire.selectCards(numberInArray, numOfSelectedCards, tx - x, ty - yReal);
+                } else if (Solitaire.isSamePile(numberInArray)) {
                     Solitaire.deselectCards();
                 } else {
                     if (canTake(Solitaire.getSelectedCard())) {
-                        addCard(Solitaire.popSelectedCards());
+                        addCards(Solitaire.popSelectedCards());
+                    } else {
+                        Solitaire.deselectCards();
                     }
                 }
             }
@@ -110,8 +113,8 @@ public class TablePile extends CardPile {
 
 
     @Override
-    public void addCard(Card[] cards) {
-        super.addCard(cards);
+    public void addCards(Card[] cards) {
+        super.addCards(cards);
         numberOfCadsFaceUp += cards.length;
     }
 

@@ -5,6 +5,9 @@
 
 import java.applet.Applet;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.util.Arrays;
 
 
 public class Solitaire extends Applet {
@@ -14,11 +17,16 @@ public class Solitaire extends Applet {
     static SuitPile suitPile[];
     static CardPile allPiles[];
 
+    static boolean dragAndDrop = false;
     static int selectedPile = -1;
     static int numberOfSelectedCards = 0;
 
     static final int WIDTH = 450;
     static final int HEIGHT = 550;
+
+    static Card[] draggingCards = null;
+    static int xDragCardOffset;
+    static int yDragCardOffset;
 
 
     public static boolean cardIsSelected() {
@@ -27,33 +35,27 @@ public class Solitaire extends Applet {
 
 
     public static Card getSelectedCard() {
-        Card card = allPiles[selectedPile].getTop();
-        for (int i = 1; i < numberOfSelectedCards; i++) {
-            card = card.link;
-        }
-        return card;
+        return draggingCards[numberOfSelectedCards - 1];
     }
 
 
     public static Card[] popSelectedCards() {
-        Card cards[] = new Card[numberOfSelectedCards];
         for (int i = 0; i < numberOfSelectedCards; i++) {
-            Card tmp = allPiles[selectedPile].pop();
-            cards[i] = tmp;
-            tmp.setSelected(false);
+            draggingCards[i].setSelected(false);
         }
         selectedPile = -1;
         numberOfSelectedCards = 0;
-        return cards;
+        return draggingCards;
     }
 
 
-    public static void selectCards(Card card, int pileNo, int num) {
-        System.out.println("Number Sel: " + num);
-        Card tmp = card;
+    public static void selectCards(int pileNo, int num, int x, int y) {
+        xDragCardOffset = x;
+        yDragCardOffset = y;
+        draggingCards = new Card[num];
         for (int i = 0; i < num; i++) {
-            tmp.setSelected(true);
-            tmp = tmp.link;
+            draggingCards[i] = allPiles[pileNo].pop();
+            draggingCards[i].setSelected(true);
         }
         selectedPile = pileNo;
         numberOfSelectedCards = num;
@@ -62,12 +64,12 @@ public class Solitaire extends Applet {
 
     public static void deselectCards() {
         if (cardIsSelected()) {
-            Card tmp = allPiles[selectedPile].getTop();
-            for (int i = 0; i < numberOfSelectedCards; i++) {
-                tmp.setSelected(false);
-                tmp = tmp.link;
+            for (int i = numberOfSelectedCards - 1; i >= 0; i--) {
+                draggingCards[i].setSelected(false);
+                allPiles[selectedPile].addCard(draggingCards[i]);
             }
         }
+        draggingCards = null;
         selectedPile = -1;
         numberOfSelectedCards = 0;
     }
@@ -92,6 +94,7 @@ public class Solitaire extends Applet {
 
 
     public void paint(final Graphics g) {
+        System.out.println("paint all");
         Dimension dim = getSize();
         Image offscreen = createImage(dim.width, dim.height);
         Graphics offgr = offscreen.getGraphics();
@@ -100,7 +103,12 @@ public class Solitaire extends Applet {
             allPiles[i].display(offgr);
         }
 
+        if(cardIsSelected()) {
+            displayDraggingCards(offgr);
+        }
+
         g.drawImage(offscreen, 0, 0, this);
+
     }
 
 
@@ -108,10 +116,60 @@ public class Solitaire extends Applet {
         for (int i = 0; i < 13; i++) {
             if (allPiles[i].includes(x, y)) {
                 allPiles[i].select(x, y);
-                repaint();
-                return true;
+                dragAndDrop = true;
+                break;
             }
         }
+        repaint();
         return true;
+    }
+
+
+    @Override
+    public boolean mouseUp(Event evt, int x, int y) {
+        dragAndDrop = false;
+        if (cardIsSelected()) {
+            boolean dropped = false;
+
+            for (int i = 0; i < 13; i++) {
+                if (allPiles[i].includes(x, y)) {
+                    allPiles[i].select(x, y);
+                    dropped = true;
+                    break;
+                }
+            }
+
+            // if dragged somewhere but not in pile
+            if (!dropped) {
+                deselectCards();
+            }
+        }
+        repaint();
+        return true;
+    }
+
+
+    @Override
+    public boolean mouseDrag(Event evt, int x, int y) {
+        if (dragAndDrop) {
+            repaint();
+        }
+        return true;
+    }
+
+
+    private void displayDraggingCards(Graphics g) {
+        int x = getMousePosition().x;
+        int y = getMousePosition().y;
+
+        for (int i = numberOfSelectedCards - 1; i >= 0; i--) {
+            int offset = (numberOfSelectedCards - i - 1) * TablePile.PAINT_Y_OFFSET;
+            draggingCards[i].draw(g, x - xDragCardOffset, y - yDragCardOffset + offset);
+        }
+    }
+
+
+    public static boolean isSamePile(int pileNumber) {
+        return pileNumber == selectedPile;
     }
 }
