@@ -28,6 +28,8 @@ public class Solitaire extends Applet {
     static int xDragCardOffset;
     static int yDragCardOffset;
 
+    static long prevMouseClick = 0;
+
 
     public static boolean cardIsSelected() {
         return selectedPile != -1;
@@ -77,6 +79,8 @@ public class Solitaire extends Applet {
 
     public void init() {
         setSize(WIDTH, HEIGHT);
+        prevMouseClick = System.currentTimeMillis();
+
         // first allocate the arrays
         allPiles = new CardPile[13];
         suitPile = new SuitPile[4];
@@ -113,15 +117,65 @@ public class Solitaire extends Applet {
 
 
     public boolean mouseDown(final Event evt, final int x, final int y) {
-        for (int i = 0; i < 13; i++) {
-            if (allPiles[i].includes(x, y)) {
-                allPiles[i].select(x, y);
-                dragAndDrop = true;
+        long click = System.currentTimeMillis();
+        if(click - prevMouseClick < 300){
+            mouseDoubleClick(x,y);
+        }
+        else {
+            for (int i = 0; i < 13; i++) {
+                if (allPiles[i].includes(x, y)) {
+                    allPiles[i].select(x, y);
+                    dragAndDrop = true;
+                    break;
+                }
+            }
+            repaint();
+        }
+        prevMouseClick = click;
+        return true;
+    }
+
+
+    private void mouseDoubleClick(int x, int y) {
+        System.out.println("double");
+        if(discardPile.includes(x, y)){
+            Card card = discardPile.getTop();
+            for (int j = 0; j < 4; j++) {
+                if(suitPile[j].canTake(card)){
+                    discardPile.pop();
+                    suitPile[j].addCard(card);
+                    return;
+                }
+            }
+            for (int j = 0; j < 7; j++) {
+                if (tableau[j].canTake(card)) {
+                    discardPile.pop();
+                    tableau[j].addCard(card);
+                    return;
+                }
+            }
+        }
+
+        for (int i = 0; i < 7; i++) {
+            if (tableau[i].includes(x, y)) {
+                Card card = tableau[i].getTop();
+                for (int j = 0; j < 4; j++) {
+                    if(suitPile[j].canTake(card)){
+                        tableau[i].pop();
+                        suitPile[j].addCard(card);
+                        return;
+                    }
+                }
+                for (int j = 0; j < 7; j++) {
+                    if (tableau[j].canTake(card) && (j != i)) {
+                        tableau[i].pop();
+                        tableau[j].addCard(card);
+                        return;
+                    }
+                }
                 break;
             }
         }
-        repaint();
-        return true;
     }
 
 
