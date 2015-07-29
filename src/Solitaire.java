@@ -152,7 +152,7 @@ public class Solitaire extends Applet {
     @Override
     public boolean mouseDrag(Event evt, int x, int y) {
         if (dragAndDrop) {
-            repaint();
+            paint(getGraphics());
         }
         return true;
     }
