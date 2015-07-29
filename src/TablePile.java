@@ -30,7 +30,8 @@ public class TablePile extends CardPile {
             return aCard.isKing();
         }
         Card topCard = getTop();
-        return (aCard.getColor() != topCard.getColor()) && (aCard.getRank() == topCard.getRank() - 1);
+        return (aCard.getColor() != topCard.getColor()) && (aCard.getRank() == topCard.getRank() - 1)
+                && topCard.isFaceUp();
     }
 
 
@@ -102,6 +103,18 @@ public class TablePile extends CardPile {
                 }
             }
         }
+    }
+
+
+    public Card getFirstFaceUpCard(){
+        Card answer = null;
+        if(!isEmpty() && (numberOfCadsFaceUp > 0)){
+            answer = getTop();
+            while (answer.link != null && answer.link.isFaceUp()){
+                answer = answer.link;
+            }
+        }
+        return answer;
     }
 
 

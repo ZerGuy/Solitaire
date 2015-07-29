@@ -5,9 +5,6 @@
 
 import java.applet.Applet;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.Arrays;
 
 
 public class Solitaire extends Applet {
@@ -17,7 +14,7 @@ public class Solitaire extends Applet {
     static SuitPile suitPile[];
     static CardPile allPiles[];
 
-    static boolean dragAndDrop = false;
+    static boolean dragAndDrop = true;
     static int selectedPile = -1;
     static int numberOfSelectedCards = 0;
 
@@ -30,8 +27,14 @@ public class Solitaire extends Applet {
 
     static long prevMouseClick = 0;
 
+    static boolean hasMove = true;
+
 
     public static boolean cardIsSelected() {
+        if (selectedPile != -1)
+            for (Card card : draggingCards) {
+                System.out.println(card.getRank() + " " + card.getRank());
+            }
         return selectedPile != -1;
     }
 
@@ -98,7 +101,6 @@ public class Solitaire extends Applet {
 
 
     public void paint(final Graphics g) {
-        System.out.println("paint all");
         Dimension dim = getSize();
         Image offscreen = createImage(dim.width, dim.height);
         Graphics offgr = offscreen.getGraphics();
@@ -107,8 +109,15 @@ public class Solitaire extends Applet {
             allPiles[i].display(offgr);
         }
 
-        if(cardIsSelected()) {
+        if (cardIsSelected()) {
             displayDraggingCards(offgr);
+        }
+
+        if(!hasMove){
+            offgr.setColor(Color.LIGHT_GRAY);
+            offgr.fillRect(dim.width/2- 50, dim.height/2 - 30, 100, 50);
+            offgr.setColor(Color.BLACK);
+            offgr.drawString("Game Over", dim.width/2 - 30, dim.height/2);
         }
 
         g.drawImage(offscreen, 0, 0, this);
@@ -118,62 +127,63 @@ public class Solitaire extends Applet {
 
     public boolean mouseDown(final Event evt, final int x, final int y) {
         long click = System.currentTimeMillis();
-        if(click - prevMouseClick < 300){
-            mouseDoubleClick(x,y);
-        }
-        else {
-            for (int i = 0; i < 13; i++) {
-                if (allPiles[i].includes(x, y)) {
-                    allPiles[i].select(x, y);
-                    dragAndDrop = true;
+        boolean isDoubleClick = (click - prevMouseClick) < 300;
+
+        for (int i = 0; i < 13; i++) {
+            if (allPiles[i].includes(x, y)) {
+                allPiles[i].select(x, y);
+
+                if (isDoubleClick && i != 0) {
+                    mouseDoubleClick(i);
                     break;
+                } else {
+                    dragAndDrop = true;
                 }
+                break;
             }
-            repaint();
         }
+
+        repaint();
         prevMouseClick = click;
         return true;
     }
 
 
-    private void mouseDoubleClick(int x, int y) {
-        System.out.println("double");
-        if(discardPile.includes(x, y)){
-            Card card = discardPile.getTop();
-            for (int j = 0; j < 4; j++) {
-                if(suitPile[j].canTake(card)){
-                    discardPile.pop();
-                    suitPile[j].addCard(card);
-                    return;
-                }
-            }
-            for (int j = 0; j < 7; j++) {
-                if (tableau[j].canTake(card)) {
-                    discardPile.pop();
-                    tableau[j].addCard(card);
-                    return;
-                }
-            }
-        }
-
-        for (int i = 0; i < 7; i++) {
-            if (tableau[i].includes(x, y)) {
-                Card card = tableau[i].getTop();
+    private void mouseDoubleClick(int pileClicked) {
+        System.out.println("auto on pile: " + pileClicked);
+        if (cardIsSelected()) {
+            if (pileClicked == 1) { // Discard Pile
                 for (int j = 0; j < 4; j++) {
-                    if(suitPile[j].canTake(card)){
-                        tableau[i].pop();
-                        suitPile[j].addCard(card);
+                    if (suitPile[j].canTake(getSelectedCard())) {
+                        suitPile[j].addCards(popSelectedCards());
+                        System.out.println("moving in Suit Pile " + j);
                         return;
                     }
                 }
                 for (int j = 0; j < 7; j++) {
-                    if (tableau[j].canTake(card) && (j != i)) {
-                        tableau[i].pop();
-                        tableau[j].addCard(card);
+                    if (tableau[j].canTake(getSelectedCard())) {
+                        tableau[j].addCards(popSelectedCards());
+                        System.out.println("moving in Table Pile " + j);
                         return;
                     }
                 }
-                break;
+            } else if (pileClicked > 5) { //Table Piles
+                if(numberOfSelectedCards == 1) {
+                    for (int j = 0; j < 4; j++) {
+                        if (suitPile[j].canTake(getSelectedCard())) {
+                            suitPile[j].addCards(popSelectedCards());
+                            System.out.println("moving in Suit Pile " + j);
+                            return;
+                        }
+                    }
+                }
+                for (int j = 0; j < 7; j++) {
+                    if ((j + 6 != pileClicked) && tableau[j].canTake(getSelectedCard())) {
+                        tableau[j].addCards(popSelectedCards());
+                        System.out.println("moving in Table Pile " + j);
+                        return;
+                    }
+                }
             }
         }
     }
@@ -199,7 +209,71 @@ public class Solitaire extends Applet {
             }
         }
         repaint();
+        findAvailableMoves();
+        if (!hasMove) {
+            System.out.println("THE END");
+        }
         return true;
+    }
+
+
+    //Check if there are any moves left
+    private void findAvailableMoves() {
+        hasMove = false;
+
+        //Check Cards Deck Pile
+        Card card = deckPile.getTop();
+        while (card != null) {
+            for (int i = 0; i < 4; i++) {
+                if (suitPile[i].canTake(card)) {
+                    hasMove = true;
+                    return;
+                }
+            }
+            for (int i = 0; i < 7; i++) {
+                if (tableau[i].canTake(card)) {
+                    hasMove = true;
+                    return;
+                }
+            }
+            card = card.link;
+        }
+
+        //Check Cards Discard Pile
+        card = discardPile.getTop();
+        while (card != null) {
+            for (int i = 0; i < 4; i++) {
+                if (suitPile[i].canTake(card)) {
+                    hasMove = true;
+                    return;
+                }
+            }
+            for (int i = 0; i < 7; i++) {
+                if (tableau[i].canTake(card)) {
+                    hasMove = true;
+                    return;
+                }
+            }
+            card = card.link;
+        }
+
+        //Check Cards in Table Piles
+        for (int i = 0; i < 7; i++) {
+            card = tableau[i].getFirstFaceUpCard();
+            for (int j = 0; j < 7; j++) {
+                if ((i != j) && tableau[j].canTake(card)) {
+                    hasMove = true;
+                    return;
+                }
+            }
+            card = tableau[i].getTop();
+            for (int j = 0; j < 4; j++) {
+                if (suitPile[j].canTake(card)) {
+                    hasMove = true;
+                    return;
+                }
+            }
+        }
     }
 
 
@@ -212,6 +286,7 @@ public class Solitaire extends Applet {
     }
 
 
+    // Display cards which are being dragged
     private void displayDraggingCards(Graphics g) {
         int x = getMousePosition().x;
         int y = getMousePosition().y;
@@ -223,6 +298,7 @@ public class Solitaire extends Applet {
     }
 
 
+    // Check whether selected card is from the same pile as a parameter
     public static boolean isSamePile(int pileNumber) {
         return pileNumber == selectedPile;
     }
